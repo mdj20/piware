@@ -1,0 +1,40 @@
+#include <pthread.h>
+#include <stdiio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <strings.h>
+
+
+int SIZE_OF_BUFFER = 1024;
+int NUM_THREADS = 10;
+int PTHREAD_STACK_SIZE = 0;
+
+
+// stuct with pointer to buffers
+typedef struct {
+
+  int *n;
+  
+} thread_data ; 
+
+
+// debbuger/driver for the buffer frames
+int main(int argc , char* argv[]){
+  
+  void *uplink_buffer, *downlink_buffer;
+  int up_n=0, down_n=0;
+
+  uplink_buffer = (void *) malloc(SIZE_OF_BUFFER);
+  downlink_buffer = (void *) malloc(SIZE_OF_BUFFER);
+  memset(uplink_buffer,0,SIZE_OF_BUFFER);
+  memset(downlink_buffer,0,SIZE_OF_BUFFER);
+  
+
+}
+
+void *down_work(void *args){
+
+  
+
+
+}
