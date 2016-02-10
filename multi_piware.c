@@ -8,12 +8,14 @@
 int SIZE_OF_BUFFER = 1024;
 int NUM_WORKERS = 0;
 int PTHREAD_STACK_SIZE = 0;  // not used
+int MAX_MSG  = 128;
+int MIN_MSG  = 32;
+float MAX_RAND = .9 , LAMBDA = .3;   // used for probability simulation
+
 
 // thread function declaration
 void *down_work(void *);
 void *buffer_filler(void* args);
-
-
 
 // header for any structure in the buffer
 typedef struct _buffer_element_header {
@@ -27,7 +29,7 @@ typedef struct _buffer_element_header {
 typedef struct _buffer_thread_data {
   void *buffer_addr;
   int buffer_size;
-  pthread_mutex_t buf_mutex;
+  pthread_mutex_t buffer_mutex;
   char run_flag;
 } buffer_thread_data;
  
@@ -39,6 +41,11 @@ typedef struct _worker_thread_data {
 
 // debbuger/driver for the buffer frames
 int main(int argc , char* argv[]){
+
+  // seed rand
+  if (argc > 1){
+    srand((unsigned int) *argv[1]);
+  }
   
   void *uplink_buffer, *downlink_buffer;
   int up_n=0,down_n=0,i=0,j=0;
@@ -57,7 +64,7 @@ int main(int argc , char* argv[]){
   b_structs[0] = malloc(sizeof(buffer_thread_data));
   b_structs[0]->buffer_addr = uplink_buffer;
   b_structs[0]->buffer_size = 0;
-  pthread_mutex_init(&(b_structs[0]->buf_mutex),NULL);
+  pthread_mutex_init(&(b_structs[0]->buffer_mutex),NULL);
   b_structs[0]->run_flag = 1;
 
   pthread_create(&buffer_threads[i],NULL,buffer_filler,b_structs[0]);
@@ -98,17 +105,33 @@ void *down_work(void *args){
 }
 
 
-// this thread will fill the buffers so simulte a stream of data / packets etc
+// this thread will fill a buffer to simulte a stream of data / packets etc
 void *buffer_filler(void* args){
 
   // parse args
   buffer_thread_data *bufdat = (buffer_thread_data*)args;
-  
-
+  int l_size = bufdat->buffer_size;  // local size
   int n = 0; // number of RUNS
 
-  // run
-  while(bufdat->run_flag){
+  float p;
+
+  // run can be toggled by calling thread
+  while(bufdat->run_flag){    
+    // check for full buffer
+    if(bufdat->buffer_size < SIZE_OF_BUFFER -(MAX_MSG + sizeof(buffer_element_header))){
+      // enter critical
+      pthread_mutex_lock(&(bufdat->buffer_mutex));
+
+      l_size = (rand()%(MAX_MSG-MIN_MSG))+MIN_MSG;
+      printf("lsize: %d\n",l_size);
+
+      pthread_mutex_unlock(&(bufdat->buffer_mutex));
+      
+    }    
+    else{
+      sleep(1);
+    }
+
     printf("BUFFER THREAD RUNNING....\n");
     n++;
     //    sleep(1);
@@ -122,7 +145,6 @@ void *buffer_filler(void* args){
   pthread_exit(NULL);
 
 }
-
 
 
 
