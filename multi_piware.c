@@ -6,7 +6,8 @@
 
 // globals 
 int SIZE_OF_BUFFER = 1024;
-int NUM_WORKERS = 0;
+int MIN_BUFFER = 200;
+int NUM_WORKERS = 3;
 int PTHREAD_STACK_SIZE = 0;  // not used
 int MAX_MSG  = 128;
 int MIN_MSG  = 32;
@@ -14,8 +15,9 @@ float MAX_RAND = .9 , LAMBDA = .3;   // used for probability simulation
 
 
 // thread function declaration
-void *down_work(void *);
 void *buffer_filler(void* args);
+void *worker(void *args);
+
 
 // header for any structure in the buffer
 typedef struct _buffer_element_header {
@@ -35,8 +37,7 @@ typedef struct _buffer_thread_data {
  
 // worker arguments 
 typedef struct _worker_thread_data {
-  void *buffer_addr[2];
-  pthread_mutex_t *buffer_mutex[2];
+  buffer_thread_data *bufdat[2];
   char run_flag;
 } worker_thread_data; 
 
@@ -44,9 +45,12 @@ typedef struct _worker_thread_data {
 // debbuger/driver for the buffer frames
 int main(int argc , char* argv[]){
 
-  // seed rand
+
+  int t = 3;
+
+  // argument sets runtime
   if (argc > 1){
-    srand((unsigned int) *argv[1]);
+    t = (unsigned int)*argv[1];
   }
   
   void *uplink_buffer, *downlink_buffer;
@@ -61,22 +65,27 @@ int main(int argc , char* argv[]){
   pthread_t buffer_threads[2];
   buffer_thread_data *b_structs[2];
 
-  // launch buffer thread
-  // create struct
+  // launch buffer threads
+  // create struct uplink
   b_structs[0] = malloc(sizeof(buffer_thread_data));
   b_structs[0]->buffer_addr = uplink_buffer;
   b_structs[0]->buffer_size = 0;
+  b_structs[0]->buffer_mutex =  malloc(sizeof(pthread_mutex_t));
   pthread_mutex_init(b_structs[0]->buffer_mutex,NULL);
   b_structs[0]->run_flag = 1;
 
-  // create struct
+  // create struct downlink
   b_structs[1] = malloc(sizeof(buffer_thread_data));
-  b_structs[1]->buffer_addr = uplink_buffer;
+  b_structs[1]->buffer_addr = downlink_buffer;
   b_structs[1]->buffer_size = 0;
+  b_structs[1]->buffer_mutex =  malloc(sizeof(pthread_mutex_t));
   pthread_mutex_init(b_structs[1]->buffer_mutex,NULL);
   b_structs[1]->run_flag = 1;
 
-  pthread_create(&buffer_threads[i],NULL,buffer_filler,b_structs[0]);
+  for (i=0;i<2;i++){
+    pthread_create(&buffer_threads[i],NULL,buffer_filler,b_structs[i]);
+    pthread_create(&buffer_threads[i],NULL,buffer_filler,b_structs[i]);
+  }
 
   pthread_t worker_threads[NUM_WORKERS];
   worker_thread_data *d_structs[NUM_WORKERS];
@@ -84,56 +93,85 @@ int main(int argc , char* argv[]){
   //pthread_t *test_t = 
   for(i=0;i<NUM_WORKERS;i++){
     d_structs[i] = malloc(sizeof(worker_thread_data));		      
-    d_structs[i]->buffer_addr[0] = uplink_buffer;				      
-    d_structs[i]->buffer_addr[1] = downlink_buffer;
-    d_structs[i]->buffer_mutex[0] = b_structs[0]->buffer_mutex;
-    d_structs[i]->buffer_mutex[1] = b_structs[1]->buffer_mutex;
-    pthread_create(&worker_threads[i],NULL,down_work,d_structs[i]);
+    d_structs[i]->bufdat[0] = b_structs[0];
+    d_structs[i]->bufdat[1] = b_structs[1];
+    d_structs[i]->run_flag = 1;
+    pthread_create(&worker_threads[i],NULL,worker,d_structs[i]);
   }
 
-  sleep(2);
+  sleep(t);
  
+
+  for(i=0;i<NUM_WORKERS;i++){
+    d_structs[i]->run_flag = 0;
+    pthread_join(worker_threads[i],NULL);
+  }
+
   b_structs[0]->run_flag = 0;
   pthread_join(buffer_threads[0], NULL);
   printf("retval: %d\n",b_structs[0]->buffer_size);
 
-  for(i=0;i<NUM_WORKERS;i++){
-    pthread_join(worker_threads[i],NULL);
-  }
+  b_structs[1]->run_flag = 0;
+  pthread_join(buffer_threads[1], NULL);
+  printf("retval: %d\n",b_structs[1]->buffer_size);
+
+  
+
 }
 
 // worker thread function
 void *worker(void *args){
+
+  int i;
   // parse args
-  worker_thread_data *data = (worker_thread_data*)args;
+  worker_thread_data *threaddat = (worker_thread_data*)args;
   
+  while(threaddat->run_flag){
 
+        
+    if (threaddat->bufdat[0]->buffer_size < MIN_BUFFER  && threaddat->bufdat[1]->buffer_size < MIN_BUFFER){
+      sleep(2);
+    }
+    else{
+      for (i=0;i<2;i++){
+	// enter critical
 
+	
+	pthread_mutex_lock(threaddat->bufdat[i]->buffer_mutex);
+	
+   
 
+	if (threaddat->bufdat[i]->buffer_size > MIN_BUFFER){
+	  buffer_element_header temp_header;
+	  memcpy(&temp_header,threaddat->bufdat[i]->buffer_addr,sizeof(buffer_element_header));
+	  
+	  printf("s %d\n", temp_header.size);
 
-printf("thread value n: %d\n",data->n);
-  int ret = data->n;
-  int i;
-  for(i=0;i<10000;i++){
-    ret++;
+	  int n_size = threaddat->bufdat[i]->buffer_size - temp_header.size;
+	  
+	  // copy the rest of the data to the front
+	  //memcpy(threaddat->bufdat[i]->buffer_addr,(threaddat->bufdat[i]->buffer_addr + temp_header.size), n_size);
+	  
+	  threaddat->bufdat[i]->buffer_size = n_size;
+	  
+	  printf("%d Remove: %d\n",i,n_size);
+	  
+	}
+	
+	
+	//exit crit
+	pthread_mutex_unlock(threaddat->bufdat[i]->buffer_mutex);
+
+	
+      }
+    }
+
+    
   }
-  printf("thread value n: %d\n",ret);
-  pthread_exit(&ret);
+    
+  pthread_exit(NULL);
 }
 
-
-// worker thread function
-void *down_work(void *args){
-  worker_thread_data *data = (worker_thread_data*)args;
-  printf("thread value n: %d\n",data->n);
-  int ret = data->n;
-  int i;
-  for(i=0;i<10000;i++){
-    ret++;
-  }
-  printf("thread value n: %d\n",ret);
-  pthread_exit(&ret);
-}
 
 
 // this thread will fill a buffer to simulte a stream of data / packets etc
@@ -196,6 +234,7 @@ void *buffer_filler(void* args){
   // set size as return value
   bufdat->buffer_size = n;
   // exit thread no return value in pthread
+  printf("BUFFER EXIT...\n");
   pthread_exit(NULL);
 }
 
