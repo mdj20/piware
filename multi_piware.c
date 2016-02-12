@@ -5,6 +5,8 @@
 #include <string.h>
 
 // globals
+int NUM_THREAD = 3;
+
 int NUM_BUFFERS = 2; 
 int SIZE_OF_BUFFER = 1024;
 int MIN_BUFFER = 200;
@@ -16,9 +18,10 @@ float MAX_RAND = .9 , LAMBDA = .3;   // used for probability simulation
 
 
 // thread function declaration
-void *buffer_filler(void* args);
-void *worker(void *args);
-
+//void *buffer_filler(void* args);
+//void *worker(void *args);
+//void equals(void* x, void* y){return(*x-*y);}
+void *worker_fnc(void *args);
 
 // header for any structure in the buffer
 typedef struct _buffer_element_header {
@@ -26,25 +29,15 @@ typedef struct _buffer_element_header {
   int size;  // indicates size of buffer message
 } buffer_element_header;
  
-// worker arguments 
-typedef struct _worker_thread_data {
-  buffer_thread_data *bufdat[2];
-  char run_flag;
-} worker_thread_data; 
 
-typedef struct _worker_data {
+typedef struct _thread_data {
 
-  void *buffer[NUM_BUFFER];
-  pthread_t buff_thread[NUM_BUFFERS];
-  pthread_mutex_t buff_mutex[NUM_BUFFERS];
-  int buff_size[NUM_BUFFERS]
+  pthread_t worker_thread[NUM_THREAD];
+  int work_ctr[NUM_THREAD];
+  void *args[NUM_THREAD];
+  int ret[NUM_THREAD];
   
-  pthread_t worker_thread[NUM_WORKERS];
-  int work_ctr[NUM_WORKERS];
-  
-} worker_data;
-
-
+} thread_data;
 
 // debbuger/driver for the buffer frames
 int main(int argc, char* argv[]){
@@ -58,41 +51,56 @@ int main(int argc, char* argv[]){
   
   int up_n=0,down_n=0,i=0,j=0;
 
-  worker_data *control;
-  control = malloc(sizeof(worker_data));
-
-  for (i=0;i<NUM_BUFFERS;i++){
-    control->buffer[i] = (void*)malloc(SIZE_OF_BUFFER);
-    memset(buffers[i],0,SIZE_OF_BUFFER);
-    control->buff_mutex=malloc(sizeof(pthread_mutex_t));
-    pthread_mutex_init(control->buff_mutex[i],NULL);
-    control->buff_size[i] = 0;    
-  }
+  thread_data *control;
+  control = malloc(sizeof(thread_data));
+  control->args = malloc(sizeof(void*)*NUM_THREADS);
 
   memset(control->work_ctr,0,sizeof(work_ctr));
 
-  for (i=0;i<NUM_BUFFERS_;i++){
-    pthread_create(&(control->buff_thread[i]),NULL,buffer_filler,control);
+  // launch 
+  for (i=0;i<NUM_THREAD;i++){
+    pthread_create(&(control->worker_thread[i]),NULL,worker_fnc,control);
   }
 
-  for(i=0;i<NUM_OF_WORKERS
-  sleep(t);
+  sleep(2);
 
-  for(i=0;i<NUM_WORKERS;i++){
-    d_structs[i]->run_flag = 0;
-    pthread_join(worker_threads[i],NULL);
+  for(i=0;i<NUM_THREAD;i++){
+    pthread_join(control->worker_thread[i],NULL);
   }
 
-  b_structs[0]->run_flag = 0;
-  pthread_join(buffer_threads[0], NULL);
-  printf("retval: %d\n",b_structs[0]->buffer_size);
 
-  b_structs[1]->run_flag = 0;
-  pthread_join(buffer_threads[1], NULL);
-  printf("retval: %d\n",b_structs[1]->buffer_size);
+  // sleep(t);
 
   
 }
+
+/*
+typedef struct _thread_data {
+
+  pthread_t worker_thread[NUM_BUFFERS];
+  int work_ctr[NUM_WORKERS];
+  void *args[NUM_WORKERS];
+  int ret[NUM_WORKERS];
+  
+} thread_data;
+*/
+
+void *worker_fnc(void *args){
+
+  thread_data *data = (thread_data*)args;
+
+  pthread_d self = pthread_self();
+  int index=0;
+  while(!pthread_equals(self,data->worker_thread[index])){
+    index++;
+  }
+
+  print("%d %d\n",self,data->worker_thread[index]);
+  sleep(index);
+
+}
+
+/*
 
 // worker thread function
 void *worker(void *args){
@@ -146,7 +154,9 @@ void *worker(void *args){
     
   pthread_exit(NULL);
 }
+*/
 
+/*
 
 
 // this thread will fill a buffer to simulte a stream of data / packets etc
@@ -212,4 +222,4 @@ void *buffer_filler(void* args){
   printf("BUFFER EXIT...\n");
   pthread_exit(NULL);
 }
-
+*/
