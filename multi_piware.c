@@ -4,7 +4,8 @@
 #include <sys/types.h>
 #include <string.h>
 
-// globals 
+// globals
+int NUM_BUFFERS = 2; 
 int SIZE_OF_BUFFER = 1024;
 int MIN_BUFFER = 200;
 int NUM_WORKERS = 3;
@@ -21,19 +22,9 @@ void *worker(void *args);
 
 // header for any structure in the buffer
 typedef struct _buffer_element_header {
-
   char instruction;  // indicates what kind of message buffer item is
   int size;  // indicates size of buffer message
-
 } buffer_element_header;
-
-// struct for buffer info
-typedef struct _buffer_thread_data {
-  void *buffer_addr;
-  int buffer_size;
-  pthread_mutex_t *buffer_mutex;
-  char run_flag;
-} buffer_thread_data;
  
 // worker arguments 
 typedef struct _worker_thread_data {
@@ -41,10 +32,22 @@ typedef struct _worker_thread_data {
   char run_flag;
 } worker_thread_data; 
 
+typedef struct _worker_data {
+
+  void *buffer[NUM_BUFFER];
+  pthread_t buff_thread[NUM_BUFFERS];
+  pthread_mutex_t buff_mutex[NUM_BUFFERS];
+  int buff_size[NUM_BUFFERS]
+  
+  pthread_t worker_thread[NUM_WORKERS];
+  int work_ctr[NUM_WORKERS];
+  
+} worker_data;
+
+
 
 // debbuger/driver for the buffer frames
-int main(int argc , char* argv[]){
-
+int main(int argc, char* argv[]){
 
   int t = 3;
 
@@ -53,54 +56,27 @@ int main(int argc , char* argv[]){
     t = (unsigned int)*argv[1];
   }
   
-  void *uplink_buffer, *downlink_buffer;
   int up_n=0,down_n=0,i=0,j=0;
 
-  // Allocate buffers and set to zero
-  uplink_buffer = (void *) malloc(SIZE_OF_BUFFER);
-  downlink_buffer = (void *) malloc(SIZE_OF_BUFFER);
-  memset(uplink_buffer,0,SIZE_OF_BUFFER);
-  memset(downlink_buffer,0,SIZE_OF_BUFFER);
+  worker_data *control;
+  control = malloc(sizeof(worker_data));
 
-  pthread_t buffer_threads[2];
-  buffer_thread_data *b_structs[2];
-
-  // launch buffer threads
-  // create struct uplink
-  b_structs[0] = malloc(sizeof(buffer_thread_data));
-  b_structs[0]->buffer_addr = uplink_buffer;
-  b_structs[0]->buffer_size = 0;
-  b_structs[0]->buffer_mutex =  malloc(sizeof(pthread_mutex_t));
-  pthread_mutex_init(b_structs[0]->buffer_mutex,NULL);
-  b_structs[0]->run_flag = 1;
-
-  // create struct downlink
-  b_structs[1] = malloc(sizeof(buffer_thread_data));
-  b_structs[1]->buffer_addr = downlink_buffer;
-  b_structs[1]->buffer_size = 0;
-  b_structs[1]->buffer_mutex =  malloc(sizeof(pthread_mutex_t));
-  pthread_mutex_init(b_structs[1]->buffer_mutex,NULL);
-  b_structs[1]->run_flag = 1;
-
-  for (i=0;i<2;i++){
-    pthread_create(&buffer_threads[i],NULL,buffer_filler,b_structs[i]);
-    pthread_create(&buffer_threads[i],NULL,buffer_filler,b_structs[i]);
+  for (i=0;i<NUM_BUFFERS;i++){
+    control->buffer[i] = (void*)malloc(SIZE_OF_BUFFER);
+    memset(buffers[i],0,SIZE_OF_BUFFER);
+    control->buff_mutex=malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(control->buff_mutex[i],NULL);
+    control->buff_size[i] = 0;    
   }
 
-  pthread_t worker_threads[NUM_WORKERS];
-  worker_thread_data *d_structs[NUM_WORKERS];
+  memset(control->work_ctr,0,sizeof(work_ctr));
 
-  //pthread_t *test_t = 
-  for(i=0;i<NUM_WORKERS;i++){
-    d_structs[i] = malloc(sizeof(worker_thread_data));		      
-    d_structs[i]->bufdat[0] = b_structs[0];
-    d_structs[i]->bufdat[1] = b_structs[1];
-    d_structs[i]->run_flag = 1;
-    pthread_create(&worker_threads[i],NULL,worker,d_structs[i]);
+  for (i=0;i<NUM_BUFFERS_;i++){
+    pthread_create(&(control->buff_thread[i]),NULL,buffer_filler,control);
   }
 
+  for(i=0;i<NUM_OF_WORKERS
   sleep(t);
- 
 
   for(i=0;i<NUM_WORKERS;i++){
     d_structs[i]->run_flag = 0;
@@ -116,7 +92,6 @@ int main(int argc , char* argv[]){
   printf("retval: %d\n",b_structs[1]->buffer_size);
 
   
-
 }
 
 // worker thread function
