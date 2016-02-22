@@ -3,28 +3,30 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
+#include "recorder.h"
 
 // global determine how 
-int NUM_THREAD = 7;   // number of total threads  must be >= NUM_BUFFERS
+int NUM_THREAD = 3;   // number of total threads  must be >= NUM_BUFFERS
 int NUM_BUFFERS = 2; // number of threads use to fill buffers 
 int SIZE_OF_BUFFER = 1024;  // size of allocated buffer 
 int MIN_BUFFER = 0;      // minimum buffer content for messages to be pulled form buffer
 int MAX_MSG  = 128;      //  maximun size of message
+int _RECORD = 1;
 
 // header for any structure in the buffer each msg in the buffer will begin with this.
 typedef struct _buffer_element_header {
   char instruction;  // indicates what kind of message buffer item is hypothetically 
   int size;  // indicates size of buffer message
 } buffer_element_header;
-
+  
 // buffer data 
 typedef struct _buffer_data_struct {
   char* buff;  // buffer address
   pthread_mutex_t mutex; // buffer mutex
   int size;   // size of all data in buffer
 } buffer_data_struct ; 
-  
-// this structure was going to be used for additional arguments or or funtion pointers to threads, no implimented
+ 
+// this structure was going to be used for additional arguments or or funtion pointers to threads, not implimented
 typedef struct _thread_args {
   void* ptr;
 } thread_args;
@@ -46,14 +48,17 @@ void c2(int index,int arg, thread_data *control);
 int add_msg(void* buff, int b_size);
 int get_msg(buffer_data_struct *bufdat, char* msg);
 
+
 int main(int argc, char* argv[]){
-  int t = 10; // defualt run value
+  int t = 3; // defult run value
 
   // argument sets run-time
   if (argc > 1){
     t = (unsigned int)*argv[1];
   }
   
+  init_recorder(500); // init transaction recorder
+
   int i=0,j=0;
 
   char *buffer;
@@ -67,6 +72,7 @@ int main(int argc, char* argv[]){
   control->args = malloc(sizeof(int)*NUM_THREAD);
   control->ret = malloc(sizeof(int)*NUM_THREAD);
   control->n_thread=0;
+
   // zero values
   memset(control->work_ctr,0,sizeof(int)*NUM_THREAD);
   memset(control->ret,0,sizeof(int)*NUM_THREAD);
@@ -86,10 +92,8 @@ int main(int argc, char* argv[]){
     control->args[i] = j++;  // code for buffer index / usually just up or down
     pthread_create(&(control->worker_thread[i]),NULL,worker_fnc,control);
   }
-  //printf("i: %d",i);
 
   control->n_thread = i;
-
   printf("number of buffers: %d\n",i);
 
   // launch MSG handler threads
@@ -110,13 +114,18 @@ int main(int argc, char* argv[]){
  
   sleep(t); // 
 
+  control->work_ctr[0] = 2;
+  
+  sleep(25);
+
+
   // join all threads
   for(i=0;i<NUM_THREAD;i++){
     control->work_ctr[i]=3;
     pthread_join(control->worker_thread[i],NULL);
   }
 
-  //tally results 
+  //tally results
   int bufferwork=0, workerwork=0;
   for (i=0;i<NUM_BUFFERS;i++){
     bufferwork += control->ret[i];
@@ -129,7 +138,8 @@ int main(int argc, char* argv[]){
     printf("WORKER %d : %d\n",i,control->ret[i]);
   }
   printf("TOTAL WORKER: %d\n",workerwork);
- 
+
+
 }
 
 void *worker_fnc(void *params){
@@ -153,22 +163,31 @@ void *worker_fnc(void *params){
     case 1:   // rmove msg from buffer state, buffer denoted by int in control->args[index]
       control->ret[index] = 1;
       total_work += c1(index,control->args[index],control);
+      //      usleep(100);
       break;
     case 2:   // debug routine (reads data in buffer and prints and resets total_work)
+      _RECORD = 1 ;  // sets recording 
       control->ret[index] = 2;
       c2(index,control->args[index],control);
-      sleep(1);
+      int i=0;
+      for (i=0;i<25;i++){
+	total_work = c1(index,control->args[index],control);
+      }
+      sleep(5);
       break;
     case 3:   // exit state
       control->ret[index] = total_work; // sets return value to total work done
       pthread_exit(NULL);
+      break;
     case 4:   // sleep state
       control->ret[index] = 4;
       sleep(10);
+      break;
     }
   }
 }
 
+// add data to buffer.
 int c0(int index, int arg, thread_data *control ){
 
   int ret=0;
@@ -183,9 +202,7 @@ int c0(int index, int arg, thread_data *control ){
   return ret;
 }
 
-
-
-int c1(int index,int arg,   thread_data *control ){
+int c1(int index, int arg, thread_data *control ){
 
   int ret = 0;
 
@@ -197,6 +214,7 @@ int c1(int index,int arg,   thread_data *control ){
     header = (buffer_element_header*)bufdat->buff;
     msg = malloc(header->size);
     ret = get_msg(bufdat,msg);
+
 
     // do something with msg etc...
 
@@ -210,20 +228,26 @@ int c1(int index,int arg,   thread_data *control ){
 
 }
 
-void c2(int index,int arg, thread_data *control){  //read buffer this is just a debug fuction
+void c2(int index,int arg, thread_data *control){  // prints contents of buffer 
+
     buffer_data_struct *bufdat = &(control->buffers[arg]);
     int ptr_index = 0;
     char* ptr;
-    
+
+    pthread_mutex_lock(&(bufdat->mutex));
+
+    printf("Thread transaction Record:\n");
+
+
+
+    printf("Buffer: %d  :",arg);
     while (ptr_index < bufdat->size){
       ptr = bufdat->buff+ptr_index;
       buffer_element_header *header = (buffer_element_header*) ptr;
-      printf("Header info:\ninstruction: %d\nSize: %d\n",header->instruction,header->size);
+      printf("%d; ",header->size);
       ptr_index += header->size;
-    }
-
-    printf("Size buffer: %d\nSize sum %d\n",bufdat->size, ptr_index);
-    
+    }    
+    pthread_mutex_unlock(&(bufdat->mutex));    
 }
 void c3(int index, thread_data *control ){
 
@@ -244,7 +268,6 @@ int get_msg(buffer_data_struct *bufdat, char* msg){
   buff_ptr += msg_size;
 
   memmove(bufdat->buff,buff_ptr,((bufdat->size)-msg_size)); // shift data to front of buffer
-
   bufdat->size -= msg_size;
 
   return msg_size; // return message size
@@ -252,7 +275,6 @@ int get_msg(buffer_data_struct *bufdat, char* msg){
 }
 
 int add_msg(void* buff, int b_size){
-
   int data_size = (rand()%MAX_MSG);          // size of data 
   int msg_size  = data_size+sizeof(buffer_element_header); // size of data+msg header
 
@@ -285,8 +307,16 @@ int add_msg(void* buff, int b_size){
   free(header);
 
   return msg_size;
-
 } 
 
+int new_record(int x, int y , int z){
+	if (recorder_is_init()){
+	int* msg;
+	msg = malloc(sizeof(int)*3);
+	msg[0]=x; msg[1]=y ; msg[2] = z;
 
- 
+	}
+}
+
+
+
