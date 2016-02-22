@@ -1,3 +1,6 @@
+// mod
+
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -47,10 +50,10 @@ int add_record(int table,int* vals){
 	int ret = 0;
 	if (check_capacity(table)){
 		int i=0,*ptr;
-		ptr = _records[i];
-		ptr = ptr+(_n*_N_COLS*(1+table));
+		ptr = _records[table];
+		ptr = ptr+(_n[table]*_N_COLS);
 		memcpy(ptr,vals,_N_COLS*sizeof(int));
-		_n++;
+		_n[table]++;
 		ret = 1;
 	}
 
