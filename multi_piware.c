@@ -118,14 +118,14 @@ int main(int argc, char** argv){
  
   sleep(t); // 
 
+  //if record is set then go into degub outut routine
   if ( _RECORD =! 0 ){
-    for (i=0;i<1; i++){
+    for (i=0;i<NUM_BUFFERS; i++){
       control->work_ctr[i]=2;
     }
     sleep(t);
   }
   
-
   // join all threads
   for(i=0;i<NUM_THREAD;i++){
     control->work_ctr[i]=3;
@@ -145,22 +145,6 @@ int main(int argc, char** argv){
     printf("WORKER %d : %d\n",i,control->ret[i]);
   }
   printf("TOTAL WORKER: %d\n",workerwork);
-
-  int **back;
-  back = malloc(sizeof(int*)*2);
-  back[0]= malloc(sizeof(int)*3*500);
-  back[1]= malloc(sizeof(int)*3*500);
-  memcpy(back[0],records(0),sizeof(int)*n(0)*3);
-  memcpy(back[1],records(1),sizeof(int)*n(1)*3);
- 
-  int* ptr;
-  ptr = back[0];
-  /*
-  for(i=0;i<500;i++){
-    printf("%d %d %d %d \n",i,*ptr,*(ptr+1),*(ptr+2));
-    ptr+=3;
-  }
-  */
   clear_records(0);
 }
 
@@ -278,7 +262,7 @@ int c2(int index,int arg, thread_data *control){  // prints contents of buffer
   }  
   
   //print buffer
-  printf("Buffer: %d  :",arg);
+  printf("\n\nBuffer: %d  :",arg);
   while (ptr_index < bufdat->size){
     ptr = bufdat->buff+ptr_index;
     buffer_element_header *header = (buffer_element_header*) ptr;
@@ -286,7 +270,7 @@ int c2(int index,int arg, thread_data *control){  // prints contents of buffer
     ptr_index += header->size;
   }
   clear_records(arg);
-  printf("\n\n\n");
+  printf("\n");
   pthread_mutex_unlock(&(bufdat->mutex));    
   
   sleep(1);
@@ -360,11 +344,10 @@ int new_record(int x, int y , int z){
 
 	}
 }
-
 void put_msg(int i ,int x, int y ){
   int* msg;
   msg = malloc(sizeof(int)*3);
-  msg[0]=(unsigned)time(NULL);  msg[1]=x;  msg[2]=y;
+  msg[0]=i ;  msg[1]=x;  msg[2]=y;
   add_record(i,msg);
   free(msg);
 }
