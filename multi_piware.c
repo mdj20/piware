@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
+#include <time.h>
 #include "recorder.h"
 
 // global determine how 
-int NUM_THREAD = 3;   // number of total threads  must be >= NUM_BUFFERS
+int NUM_THREAD = 5;   // number of total threads  must be >= NUM_BUFFERS
 int NUM_BUFFERS = 2; // number of threads use to fill buffers 
 int SIZE_OF_BUFFER = 1024;  // size of allocated buffer 
 int MIN_BUFFER = 0;      // minimum buffer content for messages to be pulled form buffer
@@ -47,17 +48,17 @@ int c1(int index,int arg,  thread_data *control);
 void c2(int index,int arg, thread_data *control);
 int add_msg(void* buff, int b_size);
 int get_msg(buffer_data_struct *bufdat, char* msg);
+void put_msg(int i ,int x, int y);
 
-
-int main(int argc, char* argv[]){
+int main(int argc, char** argv){
   int t = 3; // defult run value
 
   // argument sets run-time
   if (argc > 1){
-    t = (unsigned int)*argv[1];
+    t = strtol(argv[1],NULL,0);
   }
-  
-  init_recorder(500); // init transaction recorder
+
+  init_recorder(2,500); // init transaction recorder
 
   int i=0,j=0;
 
@@ -109,14 +110,9 @@ int main(int argc, char* argv[]){
   control->n_thread += i;
 
   printf("number of workers: %d\n",NUM_THREAD-NUM_BUFFERS);
-
   printf("Main thread sleeping for %d ... \n ",t );
  
   sleep(t); // 
-
-  control->work_ctr[0] = 2;
-  
-  sleep(25);
 
 
   // join all threads
@@ -138,6 +134,20 @@ int main(int argc, char* argv[]){
     printf("WORKER %d : %d\n",i,control->ret[i]);
   }
   printf("TOTAL WORKER: %d\n",workerwork);
+
+  int **back;
+  back = malloc(sizeof(int*)*2);
+  back[0]= malloc(sizeof(int)*3*500);
+  back[1]= malloc(sizeof(int)*3*500);
+  memcpy(back[0],records(0),sizeof(int)*n(0)*3);
+  memcpy(back[1],records(1),sizeof(int)*n(1)*3);
+ 
+  int* ptr;
+  ptr = back[0];
+  for(i=0;i<500;i++){
+    printf("%d %d %d %d \n",i,*ptr,*(ptr+1),*(ptr+2));
+    ptr+=3;
+  }
 
 
 }
@@ -196,6 +206,8 @@ int c0(int index, int arg, thread_data *control ){
   pthread_mutex_lock(&(bufdat->mutex));
   if ( bufdat->size < (SIZE_OF_BUFFER - (MAX_MSG + sizeof(buffer_element_header))) ){
     ret = add_msg(bufdat->buff,bufdat->size); //call add msg
+    put_msg(index,arg,ret);
+
     bufdat->size += ret; //update buffer size
   }  
   pthread_mutex_unlock(&(bufdat->mutex));
@@ -214,11 +226,14 @@ int c1(int index, int arg, thread_data *control ){
     header = (buffer_element_header*)bufdat->buff;
     msg = malloc(header->size);
     ret = get_msg(bufdat,msg);
-
-
+  
     // do something with msg etc...
 
+
     header = (buffer_element_header*)msg;
+    if (_RECORD != 0){
+      put_msg(arg,index,-(header->size));
+    }
 
     free(msg);  // 
   }  
@@ -318,5 +333,12 @@ int new_record(int x, int y , int z){
 	}
 }
 
+void put_msg(int i ,int x, int y ){
+  int* msg;
+  msg = malloc(sizeof(int)*3);
+  msg[0]=(unsigned)time(NULL);  msg[1]=x;  msg[2]=y;
+  add_record(i,msg);
+  free(msg);
+}
 
 
