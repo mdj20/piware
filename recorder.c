@@ -98,6 +98,15 @@ int multiply_capacity(int i, int x){
 	return ret;
 }
 
+/*
+int trim_to_size(){
+
+  _records[i]
+
+
+}
+*/
+
  // clears records returns number cleared
 int clear_records(int i){
 	int temp = _n[i];
