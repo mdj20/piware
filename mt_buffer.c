@@ -1,10 +1,24 @@
 // thread safe buffer modual
 int _N_BUFFER = 0;
+
+typedef struct _node {
+  int size;
+  node* next;
+} node;
+
+typedef struct _llist{
+  node* head;
+  node* tail;
+} llist;
+
 typedef struct _mtb_struct {
   pthread_mutex_t mutex;
-  int b_size;
-  int n_msg;
+  int b_size;  // buffer size
+  int m_size;  // total isize of msges;
+  int n_msg;   // number mesages
+  llist list;
 } mtb_struct;
+
 mtb_struct* mtbs;
 int mt_buffer_init(int size){
   if(_N_BUFFER==0){
