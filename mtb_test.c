@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "mt_buffer.h"
 #include <string.h>
+// a driver 
+
 
 int main(int argc, char** argv){
 
@@ -13,14 +15,40 @@ int main(int argc, char** argv){
   int* msg,i,j;
   msg =malloc(sizeof(int)*10);
   memcpy(msg,"0",sizeof(int));
-  for(j=1;j<10;j++){
+  for(j=0;j<10;j++){
     for (i=0;i<10;i++){
-      msg[i]+=1;
+      msg[i]=i+j;
+      printf("%d ",msg[i]);
     }
-    printf("NUM %d\n",mtb_enqueue(index,sizeof(int)*10,msg));
+    printf("\nadded NUM %d to buffer \n",mtb_enqueue(index,sizeof(int)*10,msg));
   }
 
+/*
+  int* buff = mtb_get_buffer(index);
+  for(i=0;i <99 ; i++){
+	  printf("\n%d",buff[i]);
+  }
+*/
 
-  printf("buffers: %d",mtb_num_msg(index));
-  printf("buffers: %d",peek(index));
+  printf("\n\nMade it \n\n");
+
+	void* msg_back;
+  	size_t ret_size;
+  	mtb_dequeue(index,&msg_back,&ret_size);
+  	int* ptr_back;
+  	ptr_back = msg_back;
+  	j = (int)ret_size/(sizeof(int));
+  	for(i=0;i<j;i++){
+  			  printf("Ret %d:\n",ptr_back[i]);
+  	}
+  	//msg_back = realloc(msg_back,0);
+  	free(msg_back);
+
+    printf("\n\nMade it \n\n");
+
+  	//msg_back = realloc(msg_back,0);
+
+  //printf("buffers: %d",mtb_num_msg(index));
+  //printf("buffers: %d",(int)peek(index));
+  return 0;
 }
