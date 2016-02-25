@@ -2,17 +2,17 @@
 #define MT_RECORDER_H
 
 
-// init recorder;
-void init_recorder(int tables,int capacity);
-void free_recorder();
-int recorder_is_init();
-int n(int table);
-int add_record(int table,int* vals);
-int* records(int i);
-int check_capacity(int i);
-int multiply_capacity(int i, int x);
-int clear_records(int i);
 
+// init recorder;
+int mt_recorder_init(size_t width, int capacity, int max);
+static int init_table(int index, size_t width, int capacity, int max_capacity);
+void free_recorder();
+int n(int index);
+int mt_add_record(int index,int* vals);
+void* records(int index );
+int check_capacity(int index);
+int multiply_capacity(int index, int x);
+int clear_records(int index);
 
 
 
