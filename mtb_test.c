@@ -30,24 +30,25 @@ int main(int argc, char** argv){
   }
 */
 
+  void* msg_back;
+  size_t ret_size;
+  int k = 0 ;
+  for (k=0;k < 10 ;k++){
+    mtb_dequeue(index,&msg_back,&ret_size);
+    int* ptr_back;
+    ptr_back = msg_back;
+    j = (int)ret_size/(sizeof(int));
+    for(i=0;i<j;i++){
+      printf("Ret %d:\n",ptr_back[i]);
+    }
+    printf("n_msg %d\n",mtb_num_msg(index));
+    free(msg_back);
+  }
+  
   printf("\n\nMade it \n\n");
-
-	void* msg_back;
-  	size_t ret_size;
-  	mtb_dequeue(index,&msg_back,&ret_size);
-  	int* ptr_back;
-  	ptr_back = msg_back;
-  	j = (int)ret_size/(sizeof(int));
-  	for(i=0;i<j;i++){
-  			  printf("Ret %d:\n",ptr_back[i]);
-  	}
-  	//msg_back = realloc(msg_back,0);
-  	free(msg_back);
-
-    printf("\n\nMade it \n\n");
-
-  	//msg_back = realloc(msg_back,0);
-
+  
+  //msg_back = realloc(msg_back,0);
+  
   //printf("buffers: %d",mtb_num_msg(index));
   //printf("buffers: %d",(int)peek(index));
   return 0;

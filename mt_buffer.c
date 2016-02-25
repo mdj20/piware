@@ -92,7 +92,7 @@ static int enqueue(int index, size_t size, void* addr){
     temp = malloc(sizeof(node));
     temp->node_size = size;
     last->next = temp;
-
+    mtbs[index].list.tail = temp;
 
     // copy msg
     char *ptr;
