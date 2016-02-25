@@ -131,12 +131,12 @@ void* records(int index ){
 
 int check_capacity(int index){
 	int ret = 0;
-	double x = (double)mtrs[index].n / (double)mtrs[index].c;
+	double x = (double)mtrs[index].n/(double)mtrs[index].c;
 	int remaining = mtrs[index].c - mtrs[index].n;
-	if (x > _fill_ratio){
+	if (x >_fill_ratio){
 	  ret = multiply_capacity(index,2);
 	}
-	else if ( x < _fill_ratio){
+	else{
 		ret = 1;
 	}
 	return ret;
