@@ -12,24 +12,24 @@ int main(int argc, char** argv){
 	if(argv[1] == 's'){
 		char *addr;
 		char *msg;
-		int add_len = strlen(argv[1]);
-		int msg_len = strlen(argv[3]);
+		size_t msg_len = strlen(argv[3]);
+		int add_len = strlen(argv[2]);
 		msg=malloc(msg_len);
 		strcpy(msg,argv[3]);
 		addr = malloc(add_len);
-		strcpy(msg,argv[1])
-		udp_send(argv[2],msg,msg_len);
+		strcpy(msg,argv[3]);
+		udp_send(addr,&msg,&msg_len);
 	}
 	else if (argv[1] == 'r'){
 		size_t *size;
+		*size = 0;
+		char* addr;
 		char* msg;
-		int add_len = strlen(argv[1]);
-		int msg_len = strlen(argv[3]);
-		msg=malloc(msg_len);
-		strcpy(msg,argv[3]);
+		int add_len = strlen(argv[2]);
+		addr = malloc(add_len);
 
 
-		udp_listen();
+		udp_listen(addr,&msg,size);
 
 
 	}
