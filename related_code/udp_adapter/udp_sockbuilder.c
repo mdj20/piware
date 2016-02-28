@@ -35,7 +35,7 @@ sock_struct **sbs;
 pthread_mutex_t *mutex;
 
 
-// initalizes socket tracker may not need
+// Initializes socket tracker may not need
 int init_socket_tacker(int max_sockets){
 	sbs = malloc(sizeof(sock_struct*)*max_sockets); //
 	pthread_mutex_init(mutex,NULL);
@@ -84,7 +84,7 @@ int release_socket(int sock){
 	return 0;
 }
 
-// fo now this will just call close
+// for now this will just call close on the socket
 int close_socket(int sock){
 	return close(sock);
 }
@@ -111,8 +111,9 @@ int name_socket(int sock, int port){
 	return bind(sock,(struct sockaddr*)&name,sizeof(struct sockaddr_in));
 }
 
-
-
+int set_addr(struct sockaddr_in* addr, char* addr_string){
+	return inet_pton(AF_INET,addr,addr_string);
+}
 
 
 
