@@ -8,8 +8,9 @@ int d_port = 54321;
 
 int main(int argc, char** argv){
 
-	if(argc != 4  && argc != 3){
+	if(argc != 4  && argc != 2){
 		printf("\nSYTAX: <(s)end/(r)ecv> xxx.xxx.xxx.xxx  \"Message (if sending)\"");
+		exit(0);
 	}
 
 	if(argv[1][0] == 's'){
@@ -20,8 +21,8 @@ int main(int argc, char** argv){
 		msg=malloc(msg_len);
 		strcpy(msg,argv[3]);
 		addr = malloc(add_len);
-		strcpy(msg,argv[3]);
-		udp_send(addr,54321,&msg,&msg_len);
+		memcpy(addr,argv[2],add_len);
+		udp_send(addr,d_port,d_port,&msg,&msg_len);
 	}
 	else if (argv[1][0] == 'r'){
 		size_t size;

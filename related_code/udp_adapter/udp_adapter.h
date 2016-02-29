@@ -10,7 +10,7 @@
 
 int udp_listen_from(char* ipaddr, char** ret_buff, size_t *ret_size);
 int udp_listen(int port, char** ret_buff, size_t size);
-int udp_send(char* ipaddr, char** send_buff, size_t *send_size);
+int udp_send(char* ipaddr,int port,int dest_port, char** send_buff, size_t *send_size);
 
 
 
