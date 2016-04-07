@@ -58,9 +58,3 @@ int get_guest(char* id, char* val){
 
 
 
-
-
-//int main(int argc, char** argv){};
-
-
-

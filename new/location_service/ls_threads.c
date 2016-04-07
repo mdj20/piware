@@ -1,20 +1,13 @@
 #include <stdlib.h>
 #include "mt_buffer.h"
-#include "key_value.h"
+#include "udp_adapter.h"
+#include "loc_agregate.h"
+#include "t_struct.h"
 
 static int send_port = 4444;
 static int recv_port = 5555;
 static dest_port = 6666;
-static size_t msg_size = 1024;
 
-
-typedef struct thread_struct {
-	int flow;
-	int in_buffer;
-	int out_buffer;
-	int kv;
-	char* ipaddr;
-} thread_struct;
 
 typedef struct debug_format {
 	int task;
@@ -22,13 +15,15 @@ typedef struct debug_format {
 	int B;
 }debug_format;
 
+size_t msg_size = sizeof(debug_format);
+
 
 int *loc_main_fcn(void *params){
 	thread_struct *control = (thread_struct*)params; // get params
 	for (;;){
 		switch(control->flow){
 			case 0: //work
-				main_work(control->in_buffer,control->out_buffer,control->kv);
+				main_work(control->in_buffer,control->out_buffer);
 			break;
 			case 1: // exit
 				pthread_exit(NULL);
@@ -38,7 +33,7 @@ int *loc_main_fcn(void *params){
 }
 
 
-int main_work(int in , int out, int kv){
+int main_work(int in , int out){
 	debug_format* msg;
 	size_t size = 0;
 	int ready = -1;
@@ -46,13 +41,17 @@ int main_work(int in , int out, int kv){
 	ready = mtb_dequeue(out,&msg,&size);
 	if (ready){
 		if(msg->task == 0){
-			put(kv,&(msg->A),&(msg->B));
+			update_member(&(msg->A),&(msg->B));
 		}
 		else if (msg->task == 1){
 			val = malloc(sizeof(int));
-			get(kv,&(msg->A),val);
-
-
+			get_member(&(msg->A),val);
+			debug_format * new_msg;
+			new_msg = malloc(sizeof(debug_format));
+			new_msg->task = 0;
+			new_msg->A = msg->A;
+			new_msg->B = msg->B;
+			mtb_enqueue(out,sizeof(debug_format),new_msg);
 		}
 		free(msg);
 	}
@@ -81,7 +80,7 @@ int send_work(int out, int d_port, int s_port, char* ipaddr){
 	int msg_ready = -1;
 	msg_ready = mtb_dequeue(out,&send_buf,&size);
 	if (msg_ready>-1){
-		udp_send(ipaddr,d_port,s_port,&send_buf,size);
+		udp_send(ipaddr,d_port,s_port,&send_buf,&size);
 		free(send_buf);
 	}
 	return msg_ready;

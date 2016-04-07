@@ -5,7 +5,7 @@
 
 
 int add_home_member(char* id , char* dist);
-int member_exists(int id,char* id);
+int member_exists(char* id);
 int update_member(char* id, char* val);
 int get_member(char* id, char* val);
 int add_guest(char* id , char* dist);
