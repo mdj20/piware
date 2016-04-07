@@ -8,7 +8,6 @@ int key_index(int tindex, char* k);
 int put(int id, char* k , char* v);
 int get_pointer(int id, char* k, char* v);
 int get(int id, char* k, char* v);
-
-
+int key_exists(int id,char* k);
 
 #endif

@@ -5,6 +5,8 @@
 
 typedef int table_t;
 
+
+// ptypes
 int new_id();
 int table_index(int sid);
 int key_index(int tindex, char* k);
@@ -98,6 +100,18 @@ int get(int id, char* k, char* v){
 			size_t vs = tables[tindex].v_size;
 			if(kindex >= 0){
 				memcpy(v,&(tables[tindex].vals[kindex*vs]),vs);
+				ret = kindex;
+			}
+		}
+	return ret;
+}
+
+int key_exists(int id,char* k){
+	int ret = -1;
+		int tindex = table_index(id);
+		if(tindex >= 0 ){
+			int kindex = key_index(tindex,k);
+			if(kindex >= 0){
 				ret = kindex;
 			}
 		}
