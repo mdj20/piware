@@ -3,13 +3,15 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef int table_t;
+
 int new_id();
 int table_index(int sid);
 int key_index(int tindex, char* k);
 int put(int id, char* k , char* v);
 int get_pointer(int id, char* k, char* v);
 
-int n = 0;
+static int n = 0;
 
 typedef struct kv {
 	int id;
@@ -19,9 +21,9 @@ typedef struct kv {
 	size_t v_size;
 	char* keys;
 	char* vals;
-}kv;
+} kv ;
 
-kv *tables;
+static kv *tables;
 
 int create_table(size_t k, size_t v, int length){
 	if (n==0){

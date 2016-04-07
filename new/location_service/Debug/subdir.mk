@@ -6,17 +6,20 @@
 C_SRCS += \
 ../hm_agregate.c \
 ../key_value.c \
-../kv_test.c 
+../kv_test.c \
+../loc_agregate.c 
 
 OBJS += \
 ./hm_agregate.o \
 ./key_value.o \
-./kv_test.o 
+./kv_test.o \
+./loc_agregate.o 
 
 C_DEPS += \
 ./hm_agregate.d \
 ./key_value.d \
-./kv_test.d 
+./kv_test.d \
+./loc_agregate.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
