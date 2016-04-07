@@ -3,6 +3,9 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
+O_SRCS += \
+../location_test.o 
+
 C_SRCS += \
 ../key_value.c \
 ../kv_test.c \

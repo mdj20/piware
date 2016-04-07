@@ -34,6 +34,9 @@ int main(int argc, char* argv[]){
 	pthread_create(&(threads[2]),NULL,recv_fcn,tstruct);
 
 	tstruct->flow = 1;
+	pthread_join(threads[0],NULL);
+	pthread_join(threads[1],NULL);
+	pthread_join(threads[2],NULL);
 
 	return 0;
 
