@@ -68,8 +68,9 @@ int put(int id, char* k , char* v){
 			int x = 0;
 			memcpy(&x,&(tables[tindex].keys[tables[tindex].n_pairs*ks]),ks);
 			memcpy(&y,&(tables[tindex].vals[tables[tindex].n_pairs*vs]),vs);
+			ret = tables[tindex].n_pairs;
 			tables[tindex].n_pairs++;
-			ret = kindex;
+
 		}
 		else{
 			// increase size of table but not implimented now....

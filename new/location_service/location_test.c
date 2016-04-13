@@ -11,6 +11,8 @@
 
 int main(int argc, char* argv[]){
 
+	int num_threads = 3;
+
 	const char* ip = "123.123.123.123";
 
 	int mtbin = mt_buffer_init(1024);
@@ -22,7 +24,8 @@ int main(int argc, char* argv[]){
 	}
 
 	thread_struct* tstruct;
-	tstruct->flow = 0;
+	tstruct = malloc(sizeof(tstruct));
+	tstruct->flow = 2;
 	tstruct->in_buffer = mtbin;
 	tstruct->out_buffer= mtbout;
 	tstruct->ipaddr = ip;
@@ -32,6 +35,8 @@ int main(int argc, char* argv[]){
 	pthread_create(&(threads[0]),NULL,loc_main_fcn,tstruct);
 	pthread_create(&(threads[1]),NULL,sender_fcn,tstruct);
 	pthread_create(&(threads[2]),NULL,recv_fcn,tstruct);
+
+	sleep(1000);
 
 	tstruct->flow = 1;
 	pthread_join(threads[0],NULL);

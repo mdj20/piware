@@ -3,9 +3,11 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
+O_SRCS += \
+../location_test.o 
+
 C_SRCS += \
 ../key_value.c \
-../kv_test.c \
 ../loc_agregate.c \
 ../loc_service.c \
 ../location_test.c \
@@ -16,7 +18,6 @@ C_SRCS += \
 
 OBJS += \
 ./key_value.o \
-./kv_test.o \
 ./loc_agregate.o \
 ./loc_service.o \
 ./location_test.o \
@@ -27,7 +28,6 @@ OBJS += \
 
 C_DEPS += \
 ./key_value.d \
-./kv_test.d \
 ./loc_agregate.d \
 ./loc_service.d \
 ./location_test.d \

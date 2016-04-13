@@ -2,8 +2,8 @@
 #include "key_value.h" 
 
 // there should be a file that describes the ID format for now below will suffice
-size_t mem_id_size = 2;
-size_t dist_id_size = 2;
+size_t mem_id_size = 4;
+size_t dist_id_size = 4;
 int MAX_MEM = 15;
 int MAX_TEMP = 15;
 
@@ -17,6 +17,7 @@ int add_home_member(char* id , char* dist){
 	int ret = -1;
 	if (!mem_init){
 		members = create_table(mem_id_size,dist_id_size,MAX_MEM);
+		mem_init = 1;
 	}
 	ret = put(members,id,dist);
 	return ret;

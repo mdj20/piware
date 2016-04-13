@@ -100,7 +100,7 @@ static int enqueue(int index, size_t size, void* addr){
     ptr += mtbs[index].m_size;
     memcpy(ptr,addr,size);
 
-    // increment nuber msgs and total size;
+    // increment number msgs and total size;
     mtbs[index].m_size += size;
     mtbs[index].n_msg++;
     ret = mtbs[index].n_msg;
